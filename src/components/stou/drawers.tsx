@@ -1,8 +1,7 @@
 import { useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Drawer } from "vaul";
-import { CalendarPlus, Check, Download, FileSpreadsheet, Moon, Sun, Upload } from "lucide-react";
-import { draftFrom, durationLabel, EXAM_TYPES, icsAll, presetOf, shiftTime, STATUS_OPTIONS, type ExamDraft } from "@/lib/stou/logic";
-import { saveTextFile } from "@/lib/stou/files";
+import { Check, Download, FileSpreadsheet, Moon, Sun, Upload } from "lucide-react";
+import { draftFrom, durationLabel, EXAM_TYPES, presetOf, shiftTime, STATUS_OPTIONS, type ExamDraft } from "@/lib/stou/logic";
 import { installReady, installedAlready, runInstall, subscribeInstall } from "@/lib/stou/install";
 import { useStou } from "@/lib/stou/store";
 import type { ExamFormat, ExamType } from "@/lib/stou/types";
@@ -107,26 +106,6 @@ function SettingsBody() {
         </button>
         <button type="button" className="inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-line text-sm font-semibold" onClick={exportJson}>
           <Download className="size-4" /> สำรอง JSON
-        </button>
-        <button
-          type="button"
-          className="col-span-2 inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-line text-sm font-semibold"
-          onClick={async () => {
-            const body = icsAll(data.courses);
-            if (!body) {
-              notify("ยังไม่มีวันสอบให้ส่งออก ใส่วันสอบก่อน", "warn");
-              return;
-            }
-            try {
-              const mode = await saveTextFile("stou-exams.ics", body, "text/calendar");
-              if (mode === "cancel") return;
-              notify(mode === "shared" ? "เลือกแอปปฏิทินเพื่อบันทึกทุกวิชา" : "ดาวน์โหลด stou-exams.ics แล้ว");
-            } catch {
-              notify("ส่งออกปฏิทินไม่สำเร็จ", "bad");
-            }
-          }}
-        >
-          <CalendarPlus className="size-4" /> ส่งออกปฏิทินทุกวิชา .ics
         </button>
       </div>
 

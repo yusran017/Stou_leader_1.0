@@ -4,10 +4,8 @@ import {
   Building2,
   CalendarPlus,
   Clock3,
-  Download,
   MapPin,
   Monitor,
-  Pencil,
   Sun,
   Sunset,
 } from "lucide-react";
@@ -18,8 +16,6 @@ import {
   dayChip,
   examTypeOf,
   findNextExam,
-  googleCalendarUrl,
-  icsBody,
   mapsUrl,
   pad,
   readinessCopy,
@@ -27,7 +23,6 @@ import {
   timesOf,
 } from "@/lib/stou/logic";
 import { useStou } from "@/lib/stou/store";
-import { saveTextFile } from "@/lib/stou/files";
 import type { ExamCourse, ExamType } from "@/lib/stou/types";
 import { cn } from "@/lib/utils";
 import { EXAM_BAR } from "./meta";
@@ -39,50 +34,11 @@ const TYPE_SHORT: Record<ExamType, string> = {
   retake: "สอบซ่อม",
 };
 
-function ExamActions({ course, onEdit, onRead }: { course: ExamCourse; onEdit: () => void; onRead: () => void }) {
-  const notify = useStou((s) => s.notify);
-
-  async function exportIcs() {
-    const body = icsBody(course);
-    if (!body) {
-      notify("ใส่วันสอบก่อน แล้วค่อยส่งออกไฟล์ .ics", "warn");
-      onEdit();
-      return;
-    }
-    try {
-      const mode = await saveTextFile(`exam-${course.courseCode}.ics`, body, "text/calendar");
-      if (mode === "cancel") return;
-      notify(mode === "shared" ? "เลือกแอปปฏิทินเพื่อบันทึกนัดสอบ" : `ดาวน์โหลด exam-${course.courseCode}.ics แล้ว`);
-    } catch {
-      notify("ส่งออกปฏิทินไม่สำเร็จ ลองอีกครั้ง", "bad");
-    }
-  }
-
-  function openCalendar() {
-    const url = googleCalendarUrl(course);
-    if (!url) {
-      notify("ใส่วันสอบก่อน แล้วค่อยเพิ่มลง Google ปฏิทิน", "warn");
-      onEdit();
-      return;
-    }
-    window.open(url, "_blank", "noopener,noreferrer");
-  }
-
+function ReadButton({ onRead }: { onRead: () => void }) {
   return (
-    <div className="grid grid-cols-2 gap-2">
-      <button type="button" className="inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-ink text-sm font-semibold text-paper" onClick={onEdit}>
-        <Pencil className="size-4" /> แก้ไข
-      </button>
-      <button type="button" className="inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-line text-sm font-semibold" onClick={onRead}>
-        <BookOpenText className="size-4" /> อ่าน
-      </button>
-      <button type="button" className="inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-line text-sm font-semibold" onClick={openCalendar}>
-        <CalendarPlus className="size-4" /> ปฏิทิน
-      </button>
-      <button type="button" className="inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-line text-sm font-semibold" onClick={exportIcs}>
-        <Download className="size-4" /> ไฟล์ .ics
-      </button>
-    </div>
+    <button type="button" className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-2xl border border-line text-sm font-semibold" onClick={onRead}>
+      <BookOpenText className="size-4" /> อ่านวิชานี้
+    </button>
   );
 }
 
@@ -99,7 +55,6 @@ function Session({ morning }: { morning: boolean }) {
 export function ExamPane() {
   const data = useStou((s) => s.data);
   const setTab = useStou((s) => s.setTab);
-  const setDrawer = useStou((s) => s.setDrawer);
   const openReading = useStou((s) => s.openReading);
   const [open, setOpen] = useState<string | null>(null);
   const [now, setNow] = useState<number | null>(null);
@@ -162,9 +117,8 @@ export function ExamPane() {
           </div>
 
           <HeroMeta course={next} />
-          {cd?.phase === "past" && <p className="px-4 pb-2 text-xs text-muted">สอบผ่านไปแล้ว ยังแก้รายละเอียดและส่งออกปฏิทินได้</p>}
           <div className="px-4 pb-4">
-            <ExamActions course={next} onEdit={() => setDrawer({ kind: "exam", code: next.courseCode })} onRead={() => openReading(next.courseCode)} />
+            <ReadButton onRead={() => openReading(next.courseCode)} />
           </div>
         </article>
       )}
@@ -181,7 +135,6 @@ export function ExamPane() {
             course={course}
             expanded={open === course.courseCode}
             onToggle={() => setOpen((c) => (c === course.courseCode ? null : course.courseCode))}
-            onEdit={() => setDrawer({ kind: "exam", code: course.courseCode })}
             onRead={() => openReading(course.courseCode)}
             centerQuery={mapsUrl(data, course)}
             progress={bookProgress(
@@ -232,7 +185,6 @@ function Ticket({
   course,
   expanded,
   onToggle,
-  onEdit,
   onRead,
   centerQuery,
   progress,
@@ -240,7 +192,6 @@ function Ticket({
   course: ExamCourse;
   expanded: boolean;
   onToggle: () => void;
-  onEdit: () => void;
   onRead: () => void;
   centerQuery: string;
   progress: ReturnType<typeof bookProgress>;
@@ -281,7 +232,7 @@ function Ticket({
         </div>
       </button>
       <div className="px-3 pb-3">
-        <ExamActions course={course} onEdit={onEdit} onRead={onRead} />
+        <ReadButton onRead={onRead} />
       </div>
 
       {expanded && (
