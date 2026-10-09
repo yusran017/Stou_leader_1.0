@@ -36,8 +36,8 @@ const TYPE_SHORT: Record<ExamType, string> = {
 
 function ReadButton({ onRead }: { onRead: () => void }) {
   return (
-    <button type="button" className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-2xl border border-line text-sm font-semibold" onClick={onRead}>
-      <BookOpenText className="size-4" /> อ่านวิชานี้
+    <button type="button" className="inline-flex h-9 items-center gap-1 rounded-full border border-line px-3 text-xs font-semibold" onClick={onRead}>
+      <BookOpenText className="size-3.5" /> อ่าน
     </button>
   );
 }
@@ -57,6 +57,7 @@ export function ExamPane() {
   const setTab = useStou((s) => s.setTab);
   const openReading = useStou((s) => s.openReading);
   const [open, setOpen] = useState<string | null>(null);
+  const [heroOpen, setHeroOpen] = useState(false);
   const [now, setNow] = useState<number | null>(null);
 
   useEffect(() => {
@@ -86,40 +87,48 @@ export function ExamPane() {
     <div className="space-y-4">
       {next && (
         <article className="overflow-hidden rounded-3xl border border-line bg-card shadow-lift">
-          <div className="flex items-start justify-between gap-3 px-4 pt-4">
-            <div>
-              <p className="text-xs font-semibold tracking-widest text-saffron">วิชาถัดไป</p>
-              <p className="mt-1 font-display text-sm text-muted">{next.courseCode}</p>
-              <h2 className="text-xl font-semibold leading-snug">{next.courseNameTh}</h2>
-            </div>
-            <DayStamp iso={next.examDate} />
-          </div>
-
-          <div className="mt-4 grid grid-cols-4 border-y border-line">
-            {cd?.phase === "live" ? (
-              <div className="col-span-4 px-4 py-5 text-center">
-                <p className="font-display text-4xl font-semibold text-seal-fail">กำลังสอบ</p>
-                <p className="text-sm text-muted">อยู่ในช่วง 4 ชั่วโมงหลังเวลาเริ่ม</p>
+          <button
+            type="button"
+            className="w-full text-left"
+            onClick={() => setHeroOpen((v) => !v)}
+          >
+            <div className="flex items-start justify-between gap-3 px-4 pt-4">
+              <div>
+                <p className="text-xs font-semibold tracking-widest text-saffron">วิชาถัดไป</p>
+                <p className="mt-1 font-display text-sm text-muted">{next.courseCode}</p>
+                <h2 className="text-xl font-semibold leading-snug">{next.courseNameTh}</h2>
               </div>
-            ) : (
-              [
-                ["วัน", cd?.days ?? 0],
-                ["ชม.", cd?.hours ?? 0],
-                ["นาที", cd?.mins ?? 0],
-                ["วิ", cd?.secs ?? 0],
-              ].map(([label, value]) => (
-                <div key={String(label)} className="px-1 py-3 text-center">
-                  <div className="font-display text-4xl font-semibold tabular-nums leading-none">{cd ? pad(Number(value)) : "––"}</div>
-                  <div className="mt-1 text-xs text-muted">{label}</div>
-                </div>
-              ))
-            )}
-          </div>
+              <DayStamp iso={next.examDate} />
+            </div>
 
-          <HeroMeta course={next} />
-          <div className="px-4 pb-4">
-            <ReadButton onRead={() => openReading(next.courseCode)} />
-          </div>
+            <div className="mt-4 grid grid-cols-4 border-y border-line">
+              {cd?.phase === "live" ? (
+                <div className="col-span-4 px-4 py-5 text-center">
+                  <p className="font-display text-4xl font-semibold text-seal-fail">กำลังสอบ</p>
+                  <p className="text-sm text-muted">อยู่ในช่วง 4 ชั่วโมงหลังเวลาเริ่ม</p>
+                </div>
+              ) : (
+                [
+                  ["วัน", cd?.days ?? 0],
+                  ["ชม.", cd?.hours ?? 0],
+                  ["นาที", cd?.mins ?? 0],
+                  ["วิ", cd?.secs ?? 0],
+                ].map(([label, value]) => (
+                  <div key={String(label)} className="px-1 py-3 text-center">
+                    <div className="font-display text-4xl font-semibold tabular-nums leading-none">{cd ? pad(Number(value)) : "––"}</div>
+                    <div className="mt-1 text-xs text-muted">{label}</div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <HeroMeta course={next} />
+          </button>
+          {heroOpen && (
+            <div className="px-4 pb-4">
+              <ReadButton onRead={() => openReading(next.courseCode)} />
+            </div>
+          )}
         </article>
       )}
 
@@ -231,9 +240,6 @@ function Ticket({
           </div>
         </div>
       </button>
-      <div className="px-3 pb-3">
-        <ReadButton onRead={onRead} />
-      </div>
 
       {expanded && (
         <div className="space-y-2 border-t border-line px-4 py-3 text-sm">
@@ -250,6 +256,7 @@ function Ticket({
               <MapPin className="size-4" /> เปิดแผนที่สนามสอบ
             </a>
           )}
+          <ReadButton onRead={onRead} />
         </div>
       )}
     </article>
