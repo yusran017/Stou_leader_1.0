@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>STOU Exam Pass</title>
+  <script>
+    (function () {
+      var parts = location.pathname.split('/').filter(Boolean);
+      if (parts[parts.length - 1] === 'index.html') parts.pop();
+      var repo = parts[0] || '';
+      var target = repo ? '/' + repo + '/' : '/';
+      if (location.pathname === target) return;
+      location.replace(target);
+    })();
+  </script>
+</head>
+<body style="background:#090e17;color:#f8fafc;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+  <p>กำลังกลับไปหน้าหลัก... <a id="home" href="./" style="color:#38bdf8;">คลิกที่นี่</a></p>
+  <script>
+    var parts = location.pathname.split('/').filter(Boolean);
+    var repo = parts[0] && parts[0] !== 'index.html' ? parts[0] : '';
+    document.getElementById('home').href = repo ? '/' + repo + '/' : '/';
+  </script>
+</body>
+</html>
