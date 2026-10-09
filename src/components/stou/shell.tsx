@@ -43,6 +43,12 @@ export function AppShell() {
   }, [boot]);
 
   useEffect(() => {
+    if (!import.meta.env.PROD || !("serviceWorker" in navigator)) return;
+    const base = import.meta.env.BASE_URL || "/";
+    navigator.serviceWorker.register(`${base}sw.js`, { scope: base }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
     if (!booted) return;
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme, booted]);
