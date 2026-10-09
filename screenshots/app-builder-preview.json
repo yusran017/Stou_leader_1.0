@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "STOU Ledger",
+      "hasCanvas": false,
+      "bodyTextLen": 557,
+      "bodyTextHash": "8457236a7d98866c89aaeee54828c64a3b5ce61d900b76e6df3a50433e65c56d",
+      "bodyTextPrefix": "STOU Ledger มสธ. นายสมชาย ใจดีมุ่งมั่น · 6630018899 วิชาถัดไป 10",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "STOU Ledger",
+      "hasCanvas": false,
+      "bodyTextLen": 557,
+      "bodyTextHash": "cb0969681a869e1e93720efe56f7ae1b20fc364afc479a85020fc7e5797d3e1d",
+      "bodyTextPrefix": "STOU Ledger มสธ. นายสมชาย ใจดีมุ่งมั่น · 6630018899 วิชาถัดไป 10",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}
