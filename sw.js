@@ -1,7 +1,14 @@
-const CACHE = "stou-ledger-pages-v1";
+const CACHE = "stou-ledger-pages-v2";
+const CORE = ["./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./icon-maskable-512.png", "./favicon.svg"];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(self.skipWaiting());
+  event.waitUntil(
+    caches
+      .open(CACHE)
+      .then((cache) => cache.addAll(CORE))
+      .then(() => self.skipWaiting())
+      .catch(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener("activate", (event) => {
@@ -30,7 +37,8 @@ self.addEventListener("fetch", (event) => {
         const cached = await caches.match(request);
         if (cached) return cached;
         if (request.mode === "navigate") {
-          return (await caches.match("./index.html")) || (await caches.match("index.html"));
+          const shell = (await caches.match("./index.html")) || (await caches.match("index.html"));
+          if (shell) return shell;
         }
         return new Response("offline", { status: 503, headers: { "content-type": "text/plain; charset=utf-8" } });
       }),

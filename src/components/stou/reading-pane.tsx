@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BookPlus, ChevronDown, Plus, Trash2 } from "lucide-react";
+import { BookOpen, BookPlus, Check, ChevronDown, CircleDashed, Plus, Trash2 } from "lucide-react";
 import { bookProgress, readingOverview, subStatus, topicStatus, unitStatus } from "@/lib/stou/logic";
 import { useStou } from "@/lib/stou/store";
 import type { ReadStatus } from "@/lib/stou/types";
@@ -11,10 +11,14 @@ function stampClass(status: ReadStatus) {
   return "border border-line bg-card text-muted";
 }
 
-function stampMark(status: ReadStatus) {
-  if (status === "completed") return "จบ";
-  if (status === "reading") return "กำลัง";
-  return "ยัง";
+function StampIcon({ status }: { status: ReadStatus }) {
+  const Icon = status === "completed" ? Check : status === "reading" ? BookOpen : CircleDashed;
+  return <Icon className="size-5" strokeWidth={2.4} />;
+}
+
+function stampLabel(status: ReadStatus, what: string) {
+  const name = status === "completed" ? "อ่านจบ" : status === "reading" ? "กำลังอ่าน" : "ยังไม่อ่าน";
+  return `${what}: ${name}`;
 }
 
 export function ReadingPane() {
@@ -71,7 +75,7 @@ export function ReadingPane() {
         </button>
       </div>
 
-      <p className="px-1 text-xs text-muted">แตะตราสถานะเพื่อสลับ: ยังไม่อ่าน → กำลังอ่าน → อ่านจบ</p>
+      <p className="px-1 text-xs text-muted">แตะไอคอนเพื่อสลับสถานะ: ยังไม่อ่าน → กำลังอ่าน → อ่านจบ</p>
 
       {data.studyPlan.length === 0 && (
         <div className="rounded-3xl border border-dashed border-line bg-card px-4 py-8 text-center">
@@ -139,8 +143,8 @@ export function ReadingPane() {
                     return (
                       <li key={key} className="rounded-2xl bg-paper">
                         <div className="flex items-center gap-2 p-1.5">
-                          <button type="button" aria-label={`สถานะหน่วย ${unit.unit}`} className={cn("grid size-11 shrink-0 place-items-center rounded-xl text-xs font-bold", stampClass(st))} onClick={() => cycleUnit(book.courseCode, unit.unit)}>
-                            {stampMark(st)}
+                          <button type="button" aria-label={stampLabel(st, `หน่วย ${unit.unit}`)} title={stampLabel(st, `หน่วย ${unit.unit}`)} className={cn("grid size-11 shrink-0 place-items-center rounded-xl", stampClass(st))} onClick={() => cycleUnit(book.courseCode, unit.unit)}>
+                            <StampIcon status={st} />
                           </button>
                           <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setOpenUnits((cur) => (cur.includes(key) ? cur.filter((k) => k !== key) : [...cur, key]))}>
                             <span className="text-xs text-muted">หน่วย {unit.unit}</span>
@@ -157,8 +161,8 @@ export function ReadingPane() {
                               return (
                                 <li key={sub.id} className="rounded-xl border border-line bg-card">
                                   <div className="flex items-center gap-2 p-1.5">
-                                    <button type="button" className={cn("grid size-10 shrink-0 place-items-center rounded-lg text-xs font-bold", stampClass(ss))} onClick={() => cycleSub(book.courseCode, unit.unit, sub.id)}>
-                                      {stampMark(ss)}
+                                    <button type="button" aria-label={stampLabel(ss, `ตอน ${sub.id}`)} title={stampLabel(ss, `ตอน ${sub.id}`)} className={cn("grid size-10 shrink-0 place-items-center rounded-lg", stampClass(ss))} onClick={() => cycleSub(book.courseCode, unit.unit, sub.id)}>
+                                      <StampIcon status={ss} />
                                     </button>
                                     <div className="min-w-0 flex-1">
                                       <p className="text-xs text-muted">ตอน {sub.id}</p>
@@ -184,8 +188,8 @@ export function ReadingPane() {
                                         const ts = topicStatus(topic);
                                         return (
                                           <li key={topic.id} className="flex items-center gap-2 rounded-lg bg-paper px-1.5 py-1">
-                                            <button type="button" className={cn("grid size-9 shrink-0 place-items-center rounded-lg text-xs font-bold", stampClass(ts))} onClick={() => cycleTopic(book.courseCode, unit.unit, String(sub.id), String(topic.id))}>
-                                              {stampMark(ts)}
+                                            <button type="button" aria-label={stampLabel(ts, `เรื่อง ${topic.id}`)} title={stampLabel(ts, `เรื่อง ${topic.id}`)} className={cn("grid size-9 shrink-0 place-items-center rounded-lg", stampClass(ts))} onClick={() => cycleTopic(book.courseCode, unit.unit, String(sub.id), String(topic.id))}>
+                                              <StampIcon status={ts} />
                                             </button>
                                             <div className="min-w-0 flex-1">
                                               <p className="text-xs text-muted">{topic.id}</p>

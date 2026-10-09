@@ -27,6 +27,7 @@ import {
   timesOf,
 } from "@/lib/stou/logic";
 import { useStou } from "@/lib/stou/store";
+import { saveTextFile } from "@/lib/stou/files";
 import type { ExamCourse, ExamType } from "@/lib/stou/types";
 import { cn } from "@/lib/utils";
 import { EXAM_BAR } from "./meta";
@@ -38,17 +39,51 @@ const TYPE_SHORT: Record<ExamType, string> = {
   retake: "สอบซ่อม",
 };
 
-function downloadIcs(course: ExamCourse) {
-  const body = icsBody(course);
-  if (!body) return;
-  const blob = new Blob([body], { type: "text/calendar;charset=utf-8" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = `exam-${course.courseCode}.ics`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(a.href);
+function ExamActions({ course, onEdit, onRead }: { course: ExamCourse; onEdit: () => void; onRead: () => void }) {
+  const notify = useStou((s) => s.notify);
+
+  async function exportIcs() {
+    const body = icsBody(course);
+    if (!body) {
+      notify("ใส่วันสอบก่อน แล้วค่อยส่งออกไฟล์ .ics", "warn");
+      onEdit();
+      return;
+    }
+    try {
+      const mode = await saveTextFile(`exam-${course.courseCode}.ics`, body, "text/calendar");
+      if (mode === "cancel") return;
+      notify(mode === "shared" ? "เลือกแอปปฏิทินเพื่อบันทึกนัดสอบ" : `ดาวน์โหลด exam-${course.courseCode}.ics แล้ว`);
+    } catch {
+      notify("ส่งออกปฏิทินไม่สำเร็จ ลองอีกครั้ง", "bad");
+    }
+  }
+
+  function openCalendar() {
+    const url = googleCalendarUrl(course);
+    if (!url) {
+      notify("ใส่วันสอบก่อน แล้วค่อยเพิ่มลง Google ปฏิทิน", "warn");
+      onEdit();
+      return;
+    }
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <button type="button" className="inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-ink text-sm font-semibold text-paper" onClick={onEdit}>
+        <Pencil className="size-4" /> แก้ไข
+      </button>
+      <button type="button" className="inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-line text-sm font-semibold" onClick={onRead}>
+        <BookOpenText className="size-4" /> อ่าน
+      </button>
+      <button type="button" className="inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-line text-sm font-semibold" onClick={openCalendar}>
+        <CalendarPlus className="size-4" /> ปฏิทิน
+      </button>
+      <button type="button" className="inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-line text-sm font-semibold" onClick={exportIcs}>
+        <Download className="size-4" /> ไฟล์ .ics
+      </button>
+    </div>
+  );
 }
 
 function Session({ morning }: { morning: boolean }) {
@@ -127,14 +162,9 @@ export function ExamPane() {
           </div>
 
           <HeroMeta course={next} />
-          <div className="flex gap-2 px-4 pb-4">
-            <button type="button" className="h-11 flex-1 rounded-full bg-ink text-sm font-semibold text-paper" onClick={() => setDrawer({ kind: "exam", code: next.courseCode })}>
-              แก้วันเวลาและที่นั่ง
-            </button>
-            <button type="button" className="inline-flex h-11 items-center gap-1 rounded-full border border-line px-4 text-sm font-semibold" onClick={() => openReading(next.courseCode)}>
-              <BookOpenText className="size-4" />
-              อ่าน
-            </button>
+          {cd?.phase === "past" && <p className="px-4 pb-2 text-xs text-muted">สอบผ่านไปแล้ว ยังแก้รายละเอียดและส่งออกปฏิทินได้</p>}
+          <div className="px-4 pb-4">
+            <ExamActions course={next} onEdit={() => setDrawer({ kind: "exam", code: next.courseCode })} onRead={() => openReading(next.courseCode)} />
           </div>
         </article>
       )}
@@ -154,7 +184,6 @@ export function ExamPane() {
             onEdit={() => setDrawer({ kind: "exam", code: course.courseCode })}
             onRead={() => openReading(course.courseCode)}
             centerQuery={mapsUrl(data, course)}
-            gcal={googleCalendarUrl(course)}
             progress={bookProgress(
               data.studyPlan.find((b) => b.courseCode === course.courseCode) || {
                 courseCode: course.courseCode,
@@ -206,7 +235,6 @@ function Ticket({
   onEdit,
   onRead,
   centerQuery,
-  gcal,
   progress,
 }: {
   course: ExamCourse;
@@ -215,7 +243,6 @@ function Ticket({
   onEdit: () => void;
   onRead: () => void;
   centerQuery: string;
-  gcal: string;
   progress: ReturnType<typeof bookProgress>;
 }) {
   const type = examTypeOf(course);
@@ -253,6 +280,9 @@ function Ticket({
           </div>
         </div>
       </button>
+      <div className="px-3 pb-3">
+        <ExamActions course={course} onEdit={onEdit} onRead={onRead} />
+      </div>
 
       {expanded && (
         <div className="space-y-2 border-t border-line px-4 py-3 text-sm">
@@ -264,30 +294,11 @@ function Ticket({
               value={course.examRoom ? `${course.examRoom} · ที่นั่ง ${course.seatNumber || "-"} · แถว ${course.examRow || "-"}` : "รอประกาศห้องและที่นั่ง"}
             />
           )}
-          <div className="grid grid-cols-2 gap-2 pt-1">
-            <button type="button" className="inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-ink text-sm font-semibold text-paper" onClick={onEdit}>
-              <Pencil className="size-4" /> แก้ไข
-            </button>
-            <button type="button" className="inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-line text-sm font-semibold" onClick={onRead}>
-              <BookOpenText className="size-4" /> อ่านวิชานี้
-            </button>
-            <a
-              className={cn("inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-line text-sm font-semibold", !gcal && "pointer-events-none opacity-40")}
-              href={gcal || undefined}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <CalendarPlus className="size-4" /> Google ปฏิทิน
+          {centerQuery && (
+            <a className="inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-line text-sm font-semibold" href={centerQuery} target="_blank" rel="noreferrer">
+              <MapPin className="size-4" /> เปิดแผนที่สนามสอบ
             </a>
-            <button type="button" disabled={!course.examDate} className="inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-line text-sm font-semibold disabled:opacity-40" onClick={() => downloadIcs(course)}>
-              <Download className="size-4" /> ไฟล์ .ics
-            </button>
-            {centerQuery && (
-              <a className="col-span-2 inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-line text-sm font-semibold" href={centerQuery} target="_blank" rel="noreferrer">
-                <MapPin className="size-4" /> เปิดแผนที่สนามสอบ
-              </a>
-            )}
-          </div>
+          )}
         </div>
       )}
     </article>

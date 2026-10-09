@@ -717,8 +717,51 @@ export function mapsUrl(data: StouData, course: ExamCourse) {
 
 function icsStamp(iso: string, time: string) {
   const [y, m, d] = iso.split("-");
-  const [hh, mm] = time.split(":");
-  return `${y}${m}${d}T${hh}${mm}00`;
+  const [hh, mm] = (time || "09:00").split(":");
+  return `${y}${m}${d}T${(hh || "09").padStart(2, "0")}${(mm || "00").padStart(2, "0")}00`;
+}
+
+function icsNow() {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getUTCFullYear()}${p(d.getUTCMonth() + 1)}${p(d.getUTCDate())}T${p(d.getUTCHours())}${p(d.getUTCMinutes())}${p(d.getUTCSeconds())}Z`;
+}
+
+function icsText(value: string) {
+  return value.replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+}
+
+function vevent(course: ExamCourse) {
+  if (!course.examDate) return "";
+  const { start, end } = timesOf(course);
+  const room = course.examFormat === "online" ? "สอบออนไลน์ มสธ." : `ห้อง ${course.examRoom || "-"} ที่นั่ง ${course.seatNumber || "-"} แถว ${course.examRow || "-"}`;
+  return [
+    "BEGIN:VEVENT",
+    `UID:stou-${course.courseCode}-${course.examDate}@stou-ledger`,
+    `DTSTAMP:${icsNow()}`,
+    `DTSTART;TZID=Asia/Bangkok:${icsStamp(course.examDate, start)}`,
+    `DTEND;TZID=Asia/Bangkok:${icsStamp(course.examDate, end)}`,
+    `SUMMARY:${icsText(`สอบ ${course.courseCode} ${course.courseNameTh}`)}`,
+    `LOCATION:${icsText(course.examFormat === "online" ? "ออนไลน์" : course.examVenue || "")}`,
+    `DESCRIPTION:${icsText(`${course.examTypeName || course.examTimeTh || ""} ${room}`)}`,
+    "END:VEVENT",
+  ].join("\r\n");
+}
+
+const ICS_ZONE = [
+  "BEGIN:VTIMEZONE",
+  "TZID:Asia/Bangkok",
+  "BEGIN:STANDARD",
+  "DTSTART:19700101T000000",
+  "TZOFFSETFROM:+0700",
+  "TZOFFSETTO:+0700",
+  "TZNAME:+07",
+  "END:STANDARD",
+  "END:VTIMEZONE",
+].join("\r\n");
+
+function wrapCalendar(events: string[]) {
+  return ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//STOU Ledger//TH", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", ICS_ZONE, ...events, "END:VCALENDAR"].join("\r\n");
 }
 
 export function googleCalendarUrl(course: ExamCourse) {
@@ -726,29 +769,22 @@ export function googleCalendarUrl(course: ExamCourse) {
   const { start, end } = timesOf(course);
   const text = `สอบ ${course.courseCode} ${course.courseNameTh}`;
   const dates = `${icsStamp(course.examDate, start)}/${icsStamp(course.examDate, end)}`;
-  const loc = course.examVenue || "";
+  const loc = course.examFormat === "online" ? "ออนไลน์" : course.examVenue || "";
   const details = `${course.examTypeName || ""} ${course.examTimeTh || ""}\nห้อง ${course.examRoom || "-"} ที่นั่ง ${course.seatNumber || "-"} แถว ${course.examRow || "-"}`;
   const p = new URLSearchParams({ action: "TEMPLATE", text, dates, ctz: "Asia/Bangkok", location: loc, details });
   return `https://calendar.google.com/calendar/render?${p.toString()}`;
 }
 
 export function icsBody(course: ExamCourse) {
-  if (!course.examDate) return "";
-  const { start, end } = timesOf(course);
-  const loc = course.examVenue || "";
-  return [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//STOU Ledger//TH",
-    "BEGIN:VEVENT",
-    `DTSTART:${icsStamp(course.examDate, start)}`,
-    `DTEND:${icsStamp(course.examDate, end)}`,
-    `SUMMARY:สอบ ${course.courseCode} ${course.courseNameTh}`,
-    `LOCATION:${loc}`,
-    `DESCRIPTION:${course.examTimeTh || ""} ห้อง ${course.examRoom || "-"} ที่นั่ง ${course.seatNumber || "-"}`,
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ].join("\r\n");
+  const event = vevent(course);
+  if (!event) return "";
+  return wrapCalendar([event]);
+}
+
+export function icsAll(courses: ExamCourse[]) {
+  const events = courses.map(vevent).filter(Boolean);
+  if (!events.length) return "";
+  return wrapCalendar(events);
 }
 
 export function sampleBook(): Book {

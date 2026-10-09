@@ -1,5 +1,6 @@
-import { useEffect } from "react";
-import { BookOpenText, CalendarRange, GraduationCap, Settings } from "lucide-react";
+import { useEffect, useSyncExternalStore } from "react";
+import { BookOpenText, CalendarRange, Download, GraduationCap, Settings } from "lucide-react";
+import { bindInstallPrompt, installReady, installedAlready, runInstall, subscribeInstall } from "@/lib/stou/install";
 import { useStou } from "@/lib/stou/store";
 import type { TabId } from "@/lib/stou/types";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,11 @@ export function AppShell() {
   const dismiss = useStou((s) => s.dismissToast);
   const student = useStou((s) => s.data.student);
   const setDrawer = useStou((s) => s.setDrawer);
+  const notify = useStou((s) => s.notify);
+  const canInstall = useSyncExternalStore(subscribeInstall, installReady, () => false);
+  const standalone = useSyncExternalStore(subscribeInstall, installedAlready, () => false);
+
+  useEffect(() => bindInstallPrompt(), []);
 
   useEffect(() => {
     boot();
@@ -55,7 +61,7 @@ export function AppShell() {
 
   useEffect(() => {
     if (!toast) return;
-    const id = window.setTimeout(dismiss, 2800);
+    const id = window.setTimeout(dismiss, 4600);
     return () => window.clearTimeout(id);
   }, [toast, dismiss]);
 
@@ -81,6 +87,23 @@ export function AppShell() {
           >
             <Settings className="size-5" strokeWidth={2.1} />
           </button>
+          {!standalone && (
+            <button
+              type="button"
+              className="inline-flex size-11 items-center justify-center rounded-2xl bg-saffron text-on-saffron"
+              aria-label="ติดตั้งแอป"
+              onClick={async () => {
+                if (canInstall) {
+                  const ok = await runInstall();
+                  if (ok) notify("ติดตั้งแอปแล้ว ไอคอนจะอยู่ที่หน้าจอหลัก");
+                  return;
+                }
+                notify("เปิดเมนู ⋮ ของ Chrome แล้วเลือก ติดตั้งแอป หรือ เพิ่มไปที่หน้าจอหลัก", "warn");
+              }}
+            >
+              <Download className="size-5" strokeWidth={2.2} />
+            </button>
+          )}
         </div>
       </header>
 

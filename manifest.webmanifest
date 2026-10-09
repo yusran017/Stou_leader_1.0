@@ -2,26 +2,32 @@
   "name": "STOU Ledger",
   "short_name": "STOU Ledger",
   "description": "สมุดสอบ มสธ. ตารางสอบ นับถอยหลัง แผนอ่าน และหลักสูตร",
-  "start_url": "./",
-  "scope": "./",
-  "id": "./",
+  "id": "/Stou_leader_1.0/",
+  "start_url": "/Stou_leader_1.0/",
+  "scope": "/Stou_leader_1.0/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#f3ecdf",
+  "background_color": "#c4552a",
   "theme_color": "#c4552a",
   "lang": "th",
   "icons": [
     {
-      "src": "icon-192.png",
+      "src": "/Stou_leader_1.0/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "/Stou_leader_1.0/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/Stou_leader_1.0/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

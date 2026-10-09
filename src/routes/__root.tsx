@@ -17,6 +17,7 @@ export const Route = createRootRoute({
       { name: "apple-mobile-web-app-title", content: "STOU Ledger" },
     ],
     links: [
+      { rel: "icon", type: "image/png", sizes: "192x192", href: `${import.meta.env.BASE_URL}icon-192.png` },
       { rel: "icon", type: "image/svg+xml", href: `${import.meta.env.BASE_URL}favicon.svg` },
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: `${import.meta.env.BASE_URL}manifest.webmanifest` },
