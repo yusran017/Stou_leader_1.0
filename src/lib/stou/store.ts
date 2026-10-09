@@ -1,11 +1,13 @@
 import { create } from "zustand";
 import { downloadExcel } from "./excel";
+import { saveTextFile } from "./files";
 import {
   applyExamDraft,
   applyRead,
   cloneSample,
   cycle,
   exportPayload,
+  examplePayload,
   freshBook,
   mergeImport,
   normalizeData,
@@ -82,6 +84,7 @@ export interface StouStore {
   resetCurriculum: () => void;
   loadSample: () => void;
   exportJson: () => void;
+  exportExample: () => void;
   exportXls: () => void;
   importJson: (file: File, replace: boolean) => void;
 }
@@ -416,20 +419,23 @@ export const useStou = create<StouStore>((set, get) => ({
 
   exportJson: () => {
     const data = get().data;
-    const blob = new Blob([JSON.stringify(exportPayload(data), null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `STOU_Ledger_${data.student.studentId || "backup"}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(a.href);
-    get().notify("ดาวน์โหลดไฟล์สำรอง JSON แล้ว");
+    const name = `STOU_Ledger_${data.student.studentId || "backup"}.json`;
+    void saveTextFile(name, JSON.stringify(exportPayload(data), null, 2), "application/json").then((mode) => {
+      if (mode !== "cancel") get().notify(mode === "shared" ? "เลือกที่บันทึกไฟล์ JSON" : "ดาวน์โหลดไฟล์ JSON แล้ว");
+    });
+  },
+
+  exportExample: () => {
+    void saveTextFile("STOU_Ledger_example.json", JSON.stringify(examplePayload(), null, 2), "application/json").then((mode) => {
+      if (mode !== "cancel") get().notify(mode === "shared" ? "เลือกที่บันทึกไฟล์ตัวอย่าง" : "ดาวน์โหลดไฟล์ตัวอย่าง JSON แล้ว");
+    });
   },
 
   exportXls: () => {
-    downloadExcel(get().data);
-    get().notify("ส่งออก Excel 5 แผ่นงานแล้ว");
+    void downloadExcel(get().data).then((mode) => {
+      if (mode === "cancel") return;
+      get().notify(mode === "shared" ? "เลือกที่บันทึกไฟล์ Excel 5 แผ่น" : "ส่งออก Excel 5 แผ่นงานแล้ว");
+    });
   },
 
   importJson: (file, replace) => {

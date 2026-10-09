@@ -1,3 +1,4 @@
+import { saveTextFile } from "./files";
 import { bookProgress, creditBuckets, statusLabel, timesOf } from "./logic";
 import type { StouData } from "./types";
 
@@ -20,7 +21,7 @@ function row(cells: string[], h = 20) {
 }
 
 function sheet(name: string, cols: string, rows: string[]) {
-  return `<Worksheet ss:Name="${esc(name)}"><Table>${cols}${rows.join("")}</Table></Worksheet>`;
+  return `<Worksheet ss:Name="${esc(name)}"><Table>${cols}${rows.join("")}</Table><WorksheetOptions xmlns="urn:schemas-microsoft-com:office:excel"><ProtectObjects>False</ProtectObjects><ProtectScenarios>False</ProtectScenarios></WorksheetOptions></Worksheet>`;
 }
 
 const STYLES = `
@@ -173,7 +174,24 @@ export function buildExcel(data: StouData) {
   const cols6 = "<Column ss:Width=\"160\"/><Column ss:Width=\"120\"/><Column ss:Width=\"160\"/><Column ss:Width=\"140\"/><Column ss:Width=\"120\"/><Column ss:Width=\"160\"/>";
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Author>STOU Ledger</Author>
+  <LastAuthor>STOU Ledger</LastAuthor>
+  <Created>${new Date().toISOString()}</Created>
+  <Company>Sukhothai Thammathirat Open University</Company>
+  <Version>16.00</Version>
+ </DocumentProperties>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>12000</WindowHeight>
+  <WindowWidth>24000</WindowWidth>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
 ${STYLES}
 ${sheet("สรุปภาพรวม", cols6, s1)}
 ${sheet("ตารางสอบ", "<Column ss:Width=\"40\"/><Column ss:Width=\"70\"/><Column ss:Width=\"220\"/><Column ss:Width=\"60\"/><Column ss:Width=\"140\"/><Column ss:Width=\"80\"/><Column ss:Width=\"180\"/><Column ss:Width=\"90\"/><Column ss:Width=\"160\"/><Column ss:Width=\"120\"/><Column ss:Width=\"50\"/><Column ss:Width=\"60\"/>", s2)}
@@ -186,13 +204,7 @@ ${sheet("วิชาที่ยังเหลือ", "<Column ss:Width=\"70\
 
 export function downloadExcel(data: StouData) {
   const xml = buildExcel(data);
-  const blob = new Blob([xml], { type: "application/vnd.ms-excel;charset=utf-8;" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
   const year = new Date().getFullYear() + 543;
-  a.download = `STOU_Ledger_${data.student.studentId || "report"}_${year}.xls`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(a.href);
+  const name = `STOU_Academic_Report_5Sheets_${data.student.studentId || "report"}_${year}.xls`;
+  return saveTextFile(name, xml, "application/vnd.ms-excel");
 }

@@ -1,7 +1,17 @@
+function shareable(file: File) {
+  try {
+    return !!navigator.canShare?.({ files: [file] });
+  } catch {
+    return false;
+  }
+}
+
 export async function saveTextFile(filename: string, body: string, mime: string) {
-  const file = new File([body], filename, { type: mime });
-  const nav = navigator as Navigator & { canShare?: (data: ShareData) => boolean };
-  if (nav.canShare?.({ files: [file] })) {
+  const blob = new Blob([body], { type: `${mime};charset=utf-8` });
+  const typed = new File([blob], filename, { type: mime });
+  const plain = new File([blob], filename, { type: "application/octet-stream" });
+  const file = shareable(typed) ? typed : shareable(plain) ? plain : null;
+  if (file) {
     try {
       await navigator.share({ files: [file], title: filename });
       return "shared" as const;
@@ -9,7 +19,7 @@ export async function saveTextFile(filename: string, body: string, mime: string)
       if ((err as DOMException)?.name === "AbortError") return "cancel" as const;
     }
   }
-  const url = URL.createObjectURL(new Blob([body], { type: `${mime};charset=utf-8` }));
+  const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
@@ -19,6 +29,6 @@ export async function saveTextFile(filename: string, body: string, mime: string)
   window.setTimeout(() => {
     a.remove();
     URL.revokeObjectURL(url);
-  }, 2500);
+  }, 4000);
   return "saved" as const;
 }

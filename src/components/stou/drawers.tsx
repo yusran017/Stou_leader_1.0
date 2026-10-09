@@ -1,6 +1,6 @@
 import { useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Drawer } from "vaul";
-import { Check, Download, FileSpreadsheet, Moon, Sun, Upload } from "lucide-react";
+import { BookOpenText, Check, Download, FileJson, FileSpreadsheet, Moon, RotateCcw, Smartphone, Sun, Trash2, Upload } from "lucide-react";
 import { draftFrom, durationLabel, EXAM_TYPES, presetOf, shiftTime, STATUS_OPTIONS, type ExamDraft } from "@/lib/stou/logic";
 import { installReady, installedAlready, runInstall, subscribeInstall } from "@/lib/stou/install";
 import { useStou } from "@/lib/stou/store";
@@ -55,28 +55,27 @@ function SettingsBody() {
   const data = useStou((s) => s.data);
   const theme = useStou((s) => s.theme);
   const setTheme = useStou((s) => s.setTheme);
-  const saveProfile = useStou((s) => s.saveProfile);
   const exportJson = useStou((s) => s.exportJson);
+  const exportExample = useStou((s) => s.exportExample);
   const exportXls = useStou((s) => s.exportXls);
   const importJson = useStou((s) => s.importJson);
   const resetReading = useStou((s) => s.resetReading);
   const resetCurriculum = useStou((s) => s.resetCurriculum);
   const loadSample = useStou((s) => s.loadSample);
-  const toggleSample = useStou((s) => s.toggleSample);
   const notify = useStou((s) => s.notify);
   const fileRef = useRef<HTMLInputElement>(null);
   const [replace, setReplace] = useState(false);
-  const [student, setStudent] = useState(data.student);
-  const [center, setCenter] = useState(data.examCenter);
   const canInstall = useSyncExternalStore(subscribeInstall, installReady, () => false);
   const standalone = useSyncExternalStore(subscribeInstall, installedAlready, () => false);
+  const student = data.student;
 
   return (
     <div className="space-y-4">
-      <Title>ตั้งค่าและข้อมูล</Title>
+      <Title>ตั้งค่า</Title>
       <p className="text-sm text-muted">
-        หลักสูตร {data.curriculum.length} วิชา · ตารางสอบ {data.courses.length} · หนังสือ {data.studyPlan.length} เล่ม · เก็บบนเครื่องนี้ ออฟไลน์ได้
+        {student.name || "ยังไม่ระบุชื่อ"} · {student.studentId || "ยังไม่ระบุรหัส"} · {data.curriculum.length} วิชา · สอบ {data.courses.length} · อ่าน {data.studyPlan.length} เล่ม
       </p>
+      <p className="text-xs leading-relaxed text-muted">ชื่อ รหัส สาขา วิชาเอก และสนามสอบ ไม่ได้กรอกในหน้านี้ แก้ในไฟล์ .json แล้วอัปโหลดกลับมา</p>
 
       <button type="button" className="flex h-12 w-full items-center justify-between rounded-2xl border border-line bg-paper px-3 text-sm font-semibold" onClick={() => setTheme(theme === "day" ? "night" : "day")}>
         <span className="inline-flex items-center gap-2">{theme === "day" ? <Moon className="size-4" /> : <Sun className="size-4" />} {theme === "day" ? "โหมดตะเกียง (มืด)" : "โหมดกระดาษ (สว่าง)"}</span>
@@ -86,7 +85,7 @@ function SettingsBody() {
       {!standalone && (
         <button
           type="button"
-          className="h-11 w-full rounded-full bg-saffron text-sm font-semibold text-on-saffron"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-saffron text-sm font-semibold text-on-saffron"
           onClick={async () => {
             if (!canInstall) {
               notify("เปิดเมนู ⋮ ของ Chrome แล้วเลือก ติดตั้งแอป หรือ เพิ่มไปที่หน้าจอหลัก", "warn");
@@ -96,21 +95,25 @@ function SettingsBody() {
             if (ok) notify("ติดตั้งแล้ว ไอคอน STOU Ledger จะอยู่ที่หน้าจอหลัก");
           }}
         >
-          ติดตั้งแอปและไอคอนบนหน้าจอ
+          <Smartphone className="size-4" /> ติดตั้งแอปและไอคอนบนหน้าจอ
         </button>
       )}
 
-      <div className="grid grid-cols-2 gap-2">
-        <button type="button" className="inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-seal-pass text-sm font-semibold text-on-seal" onClick={exportXls}>
-          <FileSpreadsheet className="size-4" /> Excel 5 แผ่น
-        </button>
-        <button type="button" className="inline-flex h-11 items-center justify-center gap-1.5 rounded-2xl border border-line text-sm font-semibold" onClick={exportJson}>
-          <Download className="size-4" /> สำรอง JSON
-        </button>
+      <div className="space-y-2">
+        <Action icon={<FileSpreadsheet className="size-4" />} tone="bg-seal-pass text-on-seal" title="ส่งออก Excel" hint="5 แผ่นงาน เปิดด้วย Excel หรือ Google ชีต" onClick={exportXls} />
+        <Action icon={<Download className="size-4" />} title="ดาวน์โหลด JSON ปัจจุบัน" hint="ไฟล์ข้อมูลทั้งก้อน พร้อมเงื่อนไขด้านบนไฟล์" onClick={exportJson} />
+        <Action icon={<FileJson className="size-4" />} title="ดาวน์โหลดไฟล์ตัวอย่าง .json" hint="แบบฟอร์มสั้นๆ ให้แก้ชื่อ รหัส และวิชา แล้วอัปโหลด" onClick={exportExample} />
       </div>
 
       <div className="space-y-2 rounded-2xl border border-line p-3">
-        <p className="text-sm font-semibold">นำเข้า JSON</p>
+        <p className="text-sm font-semibold">เงื่อนไขการอัปโหลด .json</p>
+        <ol className="list-decimal space-y-1 pl-4 text-xs leading-relaxed text-muted">
+          <li>ดาวน์โหลดไฟล์ตัวอย่างหรือไฟล์ปัจจุบัน แล้วแก้ในนั้น</li>
+          <li>ต้องเป็น JSON ก้อนเดียว ห้ามมีข้อความอื่นปน</li>
+          <li>ชื่อ รหัส สาขา และสนามสอบ ใส่ใน student กับ examCenter</li>
+          <li>วิชาเชื่อมด้วย courseCode วันสอบเป็น YYYY-MM-DD เวลาเป็น HH:MM</li>
+          <li>สถานะใช้ได้เฉพาะ not_taken, will_take, will_take_samrit, will_take_summer, will_take_retake, passed, failed, transferred</li>
+        </ol>
         <div className="grid grid-cols-2 gap-2 text-sm">
           <button type="button" className={cn("h-10 rounded-xl border", !replace ? "border-ink bg-ink text-paper" : "border-line")} onClick={() => setReplace(false)}>
             รวมของเดิม
@@ -119,72 +122,45 @@ function SettingsBody() {
             แทนที่สาขา
           </button>
         </div>
+        <p className="text-xs text-muted">{replace ? "ล้างหลักสูตรเดิม แล้วใช้รายวิชาในไฟล์แทน" : "รหัสเดิมจะถูกอัปเดต รหัสใหม่จะถูกเพิ่ม ของที่ไม่ได้ใส่ในไฟล์ยังอยู่"}</p>
         <input ref={fileRef} type="file" accept="application/json,.json" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) importJson(f, replace); e.target.value = ""; }} />
         <button type="button" className="inline-flex h-11 w-full items-center justify-center gap-1.5 rounded-2xl bg-saffron text-sm font-semibold text-on-saffron" onClick={() => fileRef.current?.click()}>
-          <Upload className="size-4" /> เลือกไฟล์ .json
+          <Upload className="size-4" /> อัปโหลดไฟล์ .json
         </button>
       </div>
 
-      <form
-        className="space-y-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          saveProfile(student, center);
-        }}
-      >
-        <p className="text-sm font-semibold">บัตรนักศึกษาและสนามสอบ</p>
-        <Field label="รหัสนักศึกษา">
-          <input className={inputCls} value={student.studentId} onChange={(e) => setStudent({ ...student, studentId: e.target.value })} />
-        </Field>
-        <Field label="ชื่อ-นามสกุล">
-          <input className={inputCls} value={student.name} onChange={(e) => setStudent({ ...student, name: e.target.value })} />
-        </Field>
-        <Field label="สาขาวิชา">
-          <input className={inputCls} value={student.faculty || ""} onChange={(e) => setStudent({ ...student, faculty: e.target.value })} />
-        </Field>
-        <Field label="วิชาเอก">
-          <input className={inputCls} value={student.major || ""} onChange={(e) => setStudent({ ...student, major: e.target.value })} />
-        </Field>
-        <Field label="ศูนย์วิทยพัฒนา">
-          <input className={inputCls} value={student.center || ""} onChange={(e) => setStudent({ ...student, center: e.target.value })} />
-        </Field>
-        <div className="grid grid-cols-2 gap-2">
-          <Field label="ภาค">
-            <input className={inputCls} value={student.semester || ""} onChange={(e) => setStudent({ ...student, semester: e.target.value })} />
-          </Field>
-          <Field label="ปีการศึกษา">
-            <input className={inputCls} value={student.academicYear || ""} onChange={(e) => setStudent({ ...student, academicYear: e.target.value })} />
-          </Field>
-        </div>
-        <Field label="ชื่อสนามสอบ">
-          <input className={inputCls} value={center.centerName || ""} onChange={(e) => setCenter({ ...center, centerName: e.target.value })} />
-        </Field>
-        <Field label="จังหวัด">
-          <input className={inputCls} value={center.province || ""} onChange={(e) => setCenter({ ...center, province: e.target.value })} />
-        </Field>
-        <Field label="ที่อยู่ / คำค้นแผนที่">
-          <input className={inputCls} value={center.googleMapsQuery || center.locationAddress || ""} onChange={(e) => setCenter({ ...center, googleMapsQuery: e.target.value, locationAddress: e.target.value })} />
-        </Field>
-        <button type="submit" className="h-11 w-full rounded-full bg-ink text-sm font-semibold text-paper">
-          บันทึกโปรไฟล์
-        </button>
-      </form>
-
-      <div className="space-y-2 rounded-2xl border border-seal-fail/40 p-3">
-        <button type="button" className="h-10 w-full rounded-xl border border-line text-sm font-semibold" onClick={toggleSample}>
-          เปิด/ปิดตัวอย่างหนังสือ 10151
-        </button>
-        <button type="button" className="h-10 w-full rounded-xl border border-line text-sm font-semibold" onClick={loadSample}>
-          โหลดข้อมูลตัวอย่างทั้งชุด
-        </button>
-        <button type="button" className="h-10 w-full rounded-xl border border-seal-fail text-sm font-semibold text-seal-fail" onClick={resetReading}>
-          รีเซ็ตความคืบหน้าการอ่าน
-        </button>
-        <button type="button" className="h-10 w-full rounded-xl border border-seal-fail text-sm font-semibold text-seal-fail" onClick={resetCurriculum}>
-          ล้างรายวิชาในหลักสูตร
-        </button>
+      <div className="space-y-2">
+        <Action icon={<BookOpenText className="size-4" />} title="โหลดข้อมูลตัวอย่างทั้งชุด" hint="ทับข้อมูลปัจจุบันด้วยตัวอย่าง มสธ." onClick={loadSample} />
+        <Action icon={<RotateCcw className="size-4" />} title="รีเซ็ตความคืบหน้าการอ่าน" hint="สถานะอ่านกลับเป็นยังไม่อ่าน" onClick={resetReading} danger />
+        <Action icon={<Trash2 className="size-4" />} title="ล้างรายวิชาในหลักสูตร" hint="เตรียมนำเข้าสาขาใหม่" onClick={resetCurriculum} danger />
       </div>
     </div>
+  );
+}
+
+function Action({
+  icon,
+  title,
+  hint,
+  onClick,
+  tone = "bg-wash text-ink",
+  danger = false,
+}: {
+  icon: ReactNode;
+  title: string;
+  hint: string;
+  onClick: () => void;
+  tone?: string;
+  danger?: boolean;
+}) {
+  return (
+    <button type="button" className={cn("flex w-full items-center gap-3 rounded-2xl border px-3 py-2.5 text-left", danger ? "border-seal-fail/40" : "border-line")} onClick={onClick}>
+      <span className={cn("grid size-9 shrink-0 place-items-center rounded-xl", danger ? "bg-seal-fail text-on-seal" : tone)}>{icon}</span>
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold">{title}</span>
+        <span className="block text-xs text-muted">{hint}</span>
+      </span>
+    </button>
   );
 }
 

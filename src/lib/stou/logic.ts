@@ -691,19 +691,78 @@ export function mergeImport(current: StouData, json: unknown, replace: boolean):
 
 export function aiGuide() {
   return {
-    purpose: "ไฟล์ข้อมูล STOU Ledger — ส่งให้ AI แก้ แล้วนำกลับมาอัปโหลด",
-    instructionsForAI: [
-      "ตอบกลับเป็น JSON ก้อนเดียว โครงสร้างเดียวกับไฟล์นี้",
-      "อัปโหลดแบบรวม (merge) ตาม courseCode: มีอยู่แล้วจะอัปเดต ไม่มีจะเพิ่ม",
-      "ถ้าต้องการเปลี่ยนสาขา ให้ใส่ replaceCurriculum: true หรือ mode: replace",
-      "examDate เป็น YYYY-MM-DD, startTime/endTime เป็น HH:MM",
-      "สถานะ curriculum: not_taken, will_take, will_take_samrit, will_take_summer, will_take_retake, passed, failed, transferred",
+    purpose: "ไฟล์ข้อมูล STOU Ledger แก้ในไฟล์นี้แล้วนำกลับไปอัปโหลด ไม่มีช่องกรอกชื่อ รหัส หรือสนามสอบในแอป",
+    howToUpload: [
+      "ดาวน์โหลดไฟล์นี้ แล้วเปิดแก้ด้วยแอปโน้ต หรือส่งให้ AI ให้ตอบกลับเป็น JSON ก้อนเดียว",
+      "ห้ามตัดเครื่องหมายปีกกา และห้ามใส่คำอธิบายนอก JSON",
+      "แก้ชื่อ รหัสนักศึกษา สาขา วิชาเอก ศูนย์ และสนามสอบ ใน student กับ examCenter",
+      "รายวิชาเชื่อมด้วย courseCode รหัสเดิมจะถูกอัปเดต รหัสใหม่จะถูกเพิ่ม ของที่ไม่ได้ใส่ในไฟล์จะยังอยู่ ถ้าเลือกโหมดรวมของเดิม",
+      "ถ้าต้องการทิ้งหลักสูตรเก่าทั้งก้อน ให้ใส่ replaceCurriculum เป็น true หรือในแอปเลือกโหมดแทนที่สาขา",
+      "examDate ต้องเป็น YYYY-MM-DD เช่น 2026-11-21 และ startTime endTime เป็น HH:MM เช่น 09:00",
+      "status ใช้ได้เฉพาะ not_taken, will_take, will_take_samrit, will_take_summer, will_take_retake, passed, failed, transferred",
     ],
   };
 }
 
 export function exportPayload(data: StouData) {
-  return { _aiGuide: aiGuide(), ...data };
+  return { _howToUpload: aiGuide(), replaceCurriculum: false, ...data };
+}
+
+export function examplePayload() {
+  return {
+    _howToUpload: aiGuide(),
+    replaceCurriculum: false,
+    student: {
+      studentId: "6630018899",
+      name: "นายสมชาย ใจดีมุ่งมั่น",
+      degree: "ปริญญาตรี",
+      faculty: "สาขาวิชาวิทยาศาสตร์และเทคโนโลยี",
+      major: "วิทยาการคอมพิวเตอร์และสารสนเทศ",
+      center: "ศูนย์วิทยพัฒนา มสธ. นนทบุรี",
+      semester: "1",
+      academicYear: "2569",
+    },
+    examCenter: {
+      centerName: "โรงเรียนเบญจมราชูทิศ",
+      province: "นนทบุรี",
+      locationAddress: "ถนนประชาราษฎร์ ตำบลสวนใหญ่ อำเภอเมือง จังหวัดนนทบุรี",
+      googleMapsQuery: "โรงเรียนเบญจมราชูทิศ นนทบุรี",
+    },
+    curriculum: [
+      {
+        courseCode: "10151",
+        courseNameTh: "ไทยศึกษา",
+        credits: 6,
+        category: "หมวดวิชาศึกษาทั่วไป กลุ่มวิชาบังคับ (5 ชุดวิชา)",
+        status: "will_take",
+      },
+    ],
+    courses: [
+      {
+        courseCode: "10151",
+        courseNameTh: "ไทยศึกษา",
+        credits: 6,
+        examType: "regular",
+        examTypeName: "สอบไล่ประจำภาคปกติ",
+        examFormat: "onsite",
+        examDate: "2026-11-21",
+        startTime: "09:00",
+        endTime: "12:00",
+        examVenue: "โรงเรียนเบญจมราชูทิศ",
+        examRoom: "อาคาร 3 ห้อง 324",
+        examRow: "4",
+        seatNumber: "042",
+      },
+    ],
+    studyPlan: [
+      {
+        courseCode: "10151",
+        courseNameTh: "ไทยศึกษา",
+        bookTitle: "ประมวลสารชุดวิชา 10151",
+        units: [{ unit: 1, title: "ความรู้พื้นฐาน", status: "unread", completed: false, subUnits: [] }],
+      },
+    ],
+  };
 }
 
 export function mapsUrl(data: StouData, course: ExamCourse) {
