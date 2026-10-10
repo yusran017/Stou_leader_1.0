@@ -26,7 +26,7 @@ export const Route = createRootRoute({
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,680&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,680&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Sarabun:wght@400;600;700&display=swap",
       },
     ],
   }),
@@ -36,7 +36,7 @@ export const Route = createRootRoute({
         <HeadContent />
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem("stou-ledger-theme");if(t==="night")document.documentElement.setAttribute("data-theme","night")}catch(e){}`,
+            __html: `try{var t=localStorage.getItem("stou-ledger-theme");if(t==="night")document.documentElement.setAttribute("data-theme","night");var s=localStorage.getItem("stou-ledger-skin");if(s==="meridian")document.documentElement.setAttribute("data-skin","meridian")}catch(e){}`,
           }}
         />
       </head>

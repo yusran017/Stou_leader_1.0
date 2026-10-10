@@ -52,7 +52,7 @@ export function PlanPane() {
   return (
     <div className="space-y-4">
       <section className="rounded-3xl border border-line bg-card p-4 shadow-lift">
-        <div className="flex items-end justify-between gap-3">
+        <div className="flex items-end justify-between gap-3" data-pane-head>
           <div>
             <p className="text-xs font-semibold tracking-widest text-saffron">ปริญญาตรี · 126 หน่วยกิต</p>
             <h2 className="mt-1 text-lg font-semibold">ความก้าวหน้า</h2>

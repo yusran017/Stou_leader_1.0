@@ -1,5 +1,5 @@
 import { useEffect, useSyncExternalStore } from "react";
-import { BookOpenText, CalendarRange, Download, GraduationCap, Settings } from "lucide-react";
+import { BookOpenText, CalendarRange, Compass, Download, GraduationCap, LibraryBig, Settings, Timer } from "lucide-react";
 import { bindInstallPrompt, installReady, installedAlready, runInstall, subscribeInstall } from "@/lib/stou/install";
 import { useStou } from "@/lib/stou/store";
 import type { TabId } from "@/lib/stou/types";
@@ -9,10 +9,16 @@ import { ReadingPane } from "./reading-pane";
 import { PlanPane } from "./plan-pane";
 import { AppDrawers } from "./drawers";
 
-const TABS: { id: TabId; label: string; icon: typeof CalendarRange }[] = [
+const LEDGER_TABS: { id: TabId; label: string; icon: typeof CalendarRange }[] = [
   { id: "exams", label: "ตารางสอบ", icon: CalendarRange },
   { id: "reading", label: "อ่านหนังสือ", icon: BookOpenText },
   { id: "plan", label: "หลักสูตร", icon: GraduationCap },
+];
+
+const MERIDIAN_TABS: { id: TabId; label: string; icon: typeof Timer }[] = [
+  { id: "exams", label: "นัดสอบ", icon: Timer },
+  { id: "reading", label: "คลังอ่าน", icon: LibraryBig },
+  { id: "plan", label: "แผนที่วิชา", icon: Compass },
 ];
 
 function Mark() {
@@ -33,6 +39,9 @@ export function AppShell() {
   const setTab = useStou((s) => s.setTab);
   const boot = useStou((s) => s.boot);
   const theme = useStou((s) => s.theme);
+  const skin = useStou((s) => s.skin);
+  const skinBusy = useStou((s) => s.skinBusy);
+  const skinTarget = useStou((s) => s.skinTarget);
   const booted = useStou((s) => s.booted);
   const toast = useStou((s) => s.toast);
   const dismiss = useStou((s) => s.dismissToast);
@@ -57,7 +66,8 @@ export function AppShell() {
   useEffect(() => {
     if (!booted) return;
     document.documentElement.setAttribute("data-theme", theme);
-  }, [theme, booted]);
+    document.documentElement.setAttribute("data-skin", skin);
+  }, [theme, skin, booted]);
 
   useEffect(() => {
     if (!toast) return;
@@ -65,79 +75,113 @@ export function AppShell() {
     return () => window.clearTimeout(id);
   }, [toast, dismiss]);
 
+  const meridian = skin === "meridian";
+
   return (
     <div className="mx-auto min-h-dvh w-full max-w-lg">
-      <header className="sticky top-0 z-30 border-b border-line bg-paper/90 px-4 py-3 backdrop-blur-md">
-        <div className="flex items-center gap-3">
-          <Mark />
-          <div className="min-w-0 flex-1">
-            <div className="flex items-baseline gap-2">
-              <h1 className="font-display text-lg font-semibold tracking-tight">STOU Ledger</h1>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-saffron">มสธ.</span>
-            </div>
-            <p className="truncate text-sm text-muted">
-              {student.name || "นักศึกษา"} · {student.studentId || "ยังไม่ระบุรหัส"}
-            </p>
-          </div>
-          <button
-            type="button"
-            className="inline-flex size-11 items-center justify-center rounded-2xl border border-line bg-card text-ink"
-            aria-label="การตั้งค่าและข้อมูล"
-            onClick={() => setDrawer({ kind: "settings" })}
-          >
-            <Settings className="size-5" strokeWidth={2.1} />
-          </button>
-          {!standalone && (
-            <button
-              type="button"
-              className="inline-flex size-11 items-center justify-center rounded-2xl bg-saffron text-on-saffron"
-              aria-label="ติดตั้งแอป"
-              onClick={async () => {
-                if (canInstall) {
-                  const ok = await runInstall();
-                  if (ok) notify("ติดตั้งแอปแล้ว ไอคอนจะอยู่ที่หน้าจอหลัก");
-                  return;
-                }
-                notify("เปิดเมนู ⋮ ของ Chrome แล้วเลือก ติดตั้งแอป หรือ เพิ่มไปที่หน้าจอหลัก", "warn");
-              }}
-            >
-              <Download className="size-5" strokeWidth={2.2} />
+      {meridian ? (
+        <header className="sticky top-0 z-30 border-b border-line bg-card">
+          <div className="flex items-center justify-between px-3 pt-3">
+            <button type="button" className="grid size-10 place-items-center border border-line" aria-label="การตั้งค่า" onClick={() => setDrawer({ kind: "settings" })}>
+              <Settings className="size-4" strokeWidth={1.75} />
             </button>
-          )}
-        </div>
-      </header>
+            <div className="text-center">
+              <p className="text-[10px] font-semibold tracking-[0.42em] text-saffron">MERIDIAN</p>
+              <h1 className="text-base font-semibold">สมุดนัด มสธ.</h1>
+            </div>
+            {!standalone ? (
+              <button
+                type="button"
+                className="grid size-10 place-items-center bg-saffron text-on-saffron"
+                aria-label="ติดตั้งแอป"
+                onClick={async () => {
+                  if (canInstall) {
+                    const ok = await runInstall();
+                    if (ok) notify("ติดตั้งแอปแล้ว ไอคอนจะอยู่ที่หน้าจอหลัก");
+                    return;
+                  }
+                  notify("เปิดเมนู ⋮ ของ Chrome แล้วเลือก ติดตั้งแอป หรือ เพิ่มไปที่หน้าจอหลัก", "warn");
+                }}
+              >
+                <Download className="size-4" />
+              </button>
+            ) : (
+              <span className="size-10" />
+            )}
+          </div>
+          <p className="truncate px-4 pt-1 pb-2 text-center text-xs text-muted">{student.name || "นักศึกษา"} · {student.studentId || "ยังไม่ระบุรหัส"}</p>
+          <div className="grid grid-cols-3 border-t border-line">
+            {MERIDIAN_TABS.map((item) => {
+              const Icon = item.icon;
+              const active = tab === item.id;
+              return (
+                <button key={item.id} type="button" onClick={() => setTab(item.id)} className={cn("flex flex-col items-center gap-1 py-2.5 text-[11px] font-semibold", active ? "bg-saffron text-on-saffron" : "text-muted")}>
+                  <Icon className="size-4" strokeWidth={1.75} />
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+        </header>
+      ) : (
+        <header className="sticky top-0 z-30 border-b border-line bg-paper/90 px-4 py-3 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <Mark />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline gap-2">
+                <h1 className="font-display text-lg font-semibold tracking-tight">STOU Ledger</h1>
+                <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-saffron">มสธ.</span>
+              </div>
+              <p className="truncate text-sm text-muted">
+                {student.name || "นักศึกษา"} · {student.studentId || "ยังไม่ระบุรหัส"}
+              </p>
+            </div>
+            <button type="button" className="inline-flex size-11 items-center justify-center rounded-2xl border border-line bg-card text-ink" aria-label="การตั้งค่าและข้อมูล" onClick={() => setDrawer({ kind: "settings" })}>
+              <Settings className="size-5" strokeWidth={2.1} />
+            </button>
+            {!standalone && (
+              <button
+                type="button"
+                className="inline-flex size-11 items-center justify-center rounded-2xl bg-saffron text-on-saffron"
+                aria-label="ติดตั้งแอป"
+                onClick={async () => {
+                  if (canInstall) {
+                    const ok = await runInstall();
+                    if (ok) notify("ติดตั้งแอปแล้ว ไอคอนจะอยู่ที่หน้าจอหลัก");
+                    return;
+                  }
+                  notify("เปิดเมนู ⋮ ของ Chrome แล้วเลือก ติดตั้งแอป หรือ เพิ่มไปที่หน้าจอหลัก", "warn");
+                }}
+              >
+                <Download className="size-5" strokeWidth={2.2} />
+              </button>
+            )}
+          </div>
+        </header>
+      )}
 
-      <main className="px-4 pt-4 pb-32">
+      <main className={cn("px-4 pt-4", meridian ? "pb-8" : "pb-32")}>
         {tab === "exams" && <ExamPane />}
         {tab === "reading" && <ReadingPane />}
         {tab === "plan" && <PlanPane />}
       </main>
 
-      <nav
-        className="fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
-        aria-label="เมนูหลัก"
-      >
-        <div className="mx-auto flex max-w-lg gap-1 rounded-full border border-line bg-card p-1 shadow-lift">
-          {TABS.map((item) => {
-            const Icon = item.icon;
-            const active = tab === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setTab(item.id)}
-                className={cn(
-                  "flex h-12 flex-1 items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition",
-                  active ? "bg-ink text-paper" : "text-muted",
-                )}
-              >
-                <Icon className="size-4" strokeWidth={2.2} />
-                {item.label}
-              </button>
-            );
-          })}
-        </div>
-      </nav>
+      {!meridian && (
+        <nav className="fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]" aria-label="เมนูหลัก">
+          <div className="mx-auto flex max-w-lg gap-1 rounded-full border border-line bg-card p-1 shadow-lift">
+            {LEDGER_TABS.map((item) => {
+              const Icon = item.icon;
+              const active = tab === item.id;
+              return (
+                <button key={item.id} type="button" onClick={() => setTab(item.id)} className={cn("flex h-12 flex-1 items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition", active ? "bg-ink text-paper" : "text-muted")}>
+                  <Icon className="size-4" strokeWidth={2.2} />
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      )}
 
       {toast && (
         <div className="pointer-events-none fixed inset-x-0 bottom-24 z-50 flex justify-center px-4">
@@ -156,6 +200,18 @@ export function AppShell() {
       )}
 
       <AppDrawers />
+      {skinBusy && (
+        <div className="fixed inset-0 z-[80] grid place-items-center bg-ink/88 px-6 text-paper backdrop-blur-md">
+          <div className="w-full max-w-xs text-center">
+            <p className="text-[11px] font-semibold tracking-[0.38em]">STOU</p>
+            <p className="mt-3 text-lg font-semibold">{skinTarget === "meridian" ? "กำลังประกอบหน้าเมอริเดียน" : "กำลังคืนสมุดชาด"}</p>
+            <div className="mt-5 h-1 overflow-hidden bg-white/20">
+              <div className="skin-load-bar h-full bg-saffron" />
+            </div>
+            <p className="mt-3 text-xs text-white/70">จัดตัวอักษร ไอคอน สี และการวางหน้าใหม่ทั้งระบบ</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -119,11 +119,53 @@ function NextExam({
   const t = timesOf(course);
   const chip = dayChip(course.examDate);
   const type = examTypeOf(course);
+  const skin = useStou((s) => s.skin);
+
+  if (skin === "meridian") {
+    return (
+      <article className="overflow-hidden border border-line bg-card text-center">
+        <div className="flex items-center justify-between gap-2 bg-saffron px-3 py-2 text-on-saffron">
+          <button type="button" className="text-[10px] font-semibold tracking-[0.32em]" onClick={onToggle}>
+            NEXT
+          </button>
+          <button type="button" className="text-xs font-semibold" onClick={onToggle}>
+            {chip.text}
+          </button>
+          {open ? <ReadChip onRead={onRead} /> : <span className="w-14" />}
+        </div>
+        <button type="button" className="w-full px-4 py-3" onClick={onToggle}>
+          <p className="text-[11px] tracking-[0.22em] text-muted">
+            {course.courseCode} · {TYPE_SHORT[type]}
+          </p>
+          <h2 className="mt-1 text-xl font-semibold leading-snug">{course.courseNameTh}</h2>
+          <p className="mt-1 text-xs text-muted">
+            {parts.weekday} {parts.day} {parts.month} {parts.year} · {t.start}–{t.end}
+          </p>
+          {cd?.phase === "live" ? (
+            <p className="mt-3 text-2xl font-semibold text-seal-fail">กำลังสอบ</p>
+          ) : (
+            <div className="mt-3 grid grid-cols-4">
+              {[
+                ["วัน", cd?.days ?? 0],
+                ["ชม.", cd?.hours ?? 0],
+                ["นาที", cd?.mins ?? 0],
+                ["วิ", cd?.secs ?? 0],
+              ].map(([label, value]) => (
+                <div key={String(label)}>
+                  <div className="text-xl font-semibold tabular-nums leading-none">{cd ? pad(Number(value)) : "––"}</div>
+                  <div className="mt-1 text-[10px] tracking-widest text-muted">{label}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </button>
+      </article>
+    );
+  }
 
   return (
     <article className="relative overflow-hidden rounded-[28px] bg-saffron text-on-saffron shadow-lift">
-      <div className="pointer-events-none absolute -right-6 -top-8 font-display text-8xl font-semibold text-on-saffron/10">มสธ.</div>
-      <div className="relative flex items-center justify-between gap-3 px-5 pt-5">
+      <div className="relative flex items-center justify-between gap-3 px-4 pt-3">
         <button type="button" className="text-[11px] font-semibold tracking-[0.22em]" onClick={onToggle}>
           วิชาถัดไป
         </button>
@@ -135,22 +177,22 @@ function NextExam({
         </div>
       </div>
       <button type="button" className="relative w-full text-left" onClick={onToggle}>
-        <div className="mt-5 flex items-end justify-between gap-4 px-5">
+        <div className="mt-2 flex items-end justify-between gap-3 px-4">
           <div>
-            <p className="font-display text-7xl font-semibold leading-none">{parts.day || "—"}</p>
-            <p className="mt-1 text-sm">
+            <p className="font-display text-5xl font-semibold leading-none">{parts.day || "—"}</p>
+            <p className="mt-1 text-xs">
               {parts.weekday} {parts.month} {parts.year}
             </p>
           </div>
-          <div className="max-w-[52%] pb-1 text-right">
-            <p className="font-display text-sm text-on-saffron/80">{course.courseCode}</p>
-            <h2 className="text-lg font-semibold leading-snug">{course.courseNameTh}</h2>
-            <p className="mt-1 text-xs text-on-saffron/80">{TYPE_SHORT[type]}</p>
+          <div className="max-w-[54%] pb-0.5 text-right">
+            <p className="font-display text-xs text-on-saffron/80">{course.courseCode}</p>
+            <h2 className="text-base font-semibold leading-snug">{course.courseNameTh}</h2>
+            <p className="mt-0.5 text-[11px] text-on-saffron/80">{TYPE_SHORT[type]}</p>
           </div>
         </div>
-        <div className="mx-4 mt-5 rounded-2xl bg-paper px-3 py-3 text-ink">
+        <div className="mx-3 mt-3 rounded-2xl bg-paper px-2 py-2 text-ink">
           {cd?.phase === "live" ? (
-            <p className="text-center font-display text-3xl font-semibold text-seal-fail">กำลังสอบ</p>
+            <p className="text-center font-display text-2xl font-semibold text-seal-fail">กำลังสอบ</p>
           ) : (
             <div className="grid grid-cols-4">
               {[
@@ -160,13 +202,13 @@ function NextExam({
                 ["วิ", cd?.secs ?? 0],
               ].map(([label, value]) => (
                 <div key={String(label)} className="text-center">
-                  <div className="font-display text-3xl font-semibold tabular-nums leading-none">{cd ? pad(Number(value)) : "––"}</div>
-                  <div className="mt-1 text-[11px] text-muted">{label}</div>
+                  <div className="font-display text-2xl font-semibold tabular-nums leading-none">{cd ? pad(Number(value)) : "––"}</div>
+                  <div className="mt-0.5 text-[10px] text-muted">{label}</div>
                 </div>
               ))}
             </div>
           )}
-          <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-2 text-xs">
+          <div className="mt-2 flex items-center justify-between gap-2 border-t border-line pt-1.5 text-xs">
             <Session morning={t.morning} />
             <span className="inline-flex items-center gap-1 text-muted">
               <Clock3 className="size-3.5" />
@@ -174,7 +216,7 @@ function NextExam({
             </span>
           </div>
         </div>
-        <div className="h-4" />
+        <div className="h-3" />
       </button>
     </article>
   );
@@ -199,6 +241,34 @@ function Ticket({
   const chip = dayChip(course.examDate);
   const online = course.examFormat === "online";
   const ready = readinessCopy(progress.done, progress.total, progress.percent);
+  const skin = useStou((s) => s.skin);
+
+  if (skin === "meridian") {
+    return (
+      <article className="border border-line bg-card">
+        <button type="button" onClick={onToggle} className="w-full px-4 py-3 text-center">
+          <p className="text-[11px] tracking-[0.18em] text-muted">
+            {course.courseCode} · {TYPE_SHORT[type]}
+          </p>
+          <h3 className="mt-0.5 text-lg font-semibold leading-snug">{course.courseNameTh}</h3>
+          <p className="mt-1 text-xs text-muted">
+            {parts.day} {parts.month} · {t.start}–{t.end} · {chip.text}
+          </p>
+        </button>
+        {expanded && (
+          <div className="space-y-2 border-t border-line px-4 py-3 text-center text-sm">
+            <div className="flex justify-center">
+              <ReadChip onRead={onRead} />
+            </div>
+            <Detail icon={online ? Monitor : MapPin} label={online ? "รูปแบบ" : "สนามสอบ"} value={online ? "สอบออนไลน์ มสธ." : course.examVenue || "รอประกาศสนาม"} />
+            {!online && (
+              <Detail icon={Building2} label="ห้อง / ที่นั่ง" value={course.examRoom ? `${course.examRoom} · ที่นั่ง ${course.seatNumber || "-"} · แถว ${course.examRow || "-"}` : "รอประกาศห้องและที่นั่ง"} />
+            )}
+          </div>
+        )}
+      </article>
+    );
+  }
 
   return (
     <article className="relative overflow-hidden rounded-3xl border border-line bg-card">

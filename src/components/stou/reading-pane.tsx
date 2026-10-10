@@ -47,7 +47,7 @@ export function ReadingPane() {
   return (
     <div className="space-y-4">
       <section className="rounded-3xl border border-line bg-card p-4 shadow-lift">
-        <div className="flex items-end justify-between">
+        <div className="flex items-end justify-between" data-pane-head>
           <div>
             <p className="text-xs font-semibold tracking-widest text-seal-pass">เตรียมสอบ</p>
             <h2 className="text-lg font-semibold">ความคืบหน้าการอ่าน</h2>

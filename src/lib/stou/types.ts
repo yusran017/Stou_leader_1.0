@@ -13,6 +13,7 @@ export type ExamFormat = "onsite" | "online";
 export type ReadStatus = "unread" | "reading" | "completed";
 export type TabId = "exams" | "reading" | "plan";
 export type ThemeId = "day" | "night";
+export type SkinId = "ledger" | "meridian";
 
 export interface Student {
   studentId: string;

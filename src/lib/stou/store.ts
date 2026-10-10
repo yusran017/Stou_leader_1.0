@@ -18,10 +18,12 @@ import {
   unitStatus,
   type ExamDraft,
 } from "./logic";
-import type { CourseStatus, DrawerState, ReadStatus, StouData, TabId, ThemeId, ToastNote, Unit } from "./types";
+import type { CourseStatus, DrawerState, ReadStatus, SkinId, StouData, TabId, ThemeId, ToastNote, Unit } from "./types";
 
 const KEY = "stou-ledger-v1";
 const THEME_KEY = "stou-ledger-theme";
+const SKIN_KEY = "stou-ledger-skin";
+let skinTimer = 0;
 const LEGACY = ["stou_aero_glass_v6", "stou_liquid_glass_v5"];
 
 function readSaved(): StouData | null {
@@ -44,6 +46,9 @@ export interface StouStore {
   data: StouData;
   tab: TabId;
   theme: ThemeId;
+  skin: SkinId;
+  skinBusy: boolean;
+  skinTarget: SkinId | null;
   drawer: DrawerState;
   toast: ToastNote | null;
   booted: boolean;
@@ -55,6 +60,7 @@ export interface StouStore {
   boot: () => void;
   setTab: (tab: TabId) => void;
   setTheme: (theme: ThemeId) => void;
+  setSkin: (skin: SkinId) => void;
   setDrawer: (drawer: DrawerState) => void;
   notify: (msg: string, tone?: ToastNote["tone"]) => void;
   dismissToast: () => void;
@@ -103,6 +109,9 @@ export const useStou = create<StouStore>((set, get) => ({
   data: cloneSample(),
   tab: "exams",
   theme: "day",
+  skin: "ledger",
+  skinBusy: false,
+  skinTarget: null,
   drawer: null,
   toast: null,
   booted: false,
@@ -115,14 +124,17 @@ export const useStou = create<StouStore>((set, get) => ({
   boot: () => {
     const saved = readSaved();
     let theme: ThemeId = "day";
+    let skin: SkinId = "ledger";
     try {
       const t = localStorage.getItem(THEME_KEY);
       if (t === "night" || t === "day") theme = t;
+      const s = localStorage.getItem(SKIN_KEY);
+      if (s === "meridian" || s === "ledger") skin = s;
     } catch {
       /* ignore */
     }
-    if (saved) set({ data: saved, theme, booted: true });
-    else set({ theme, booted: true });
+    if (saved) set({ data: saved, theme, skin, booted: true });
+    else set({ theme, skin, booted: true });
   },
 
   setTab: (tab) => set({ tab }),
@@ -132,6 +144,20 @@ export const useStou = create<StouStore>((set, get) => ({
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute("content", theme === "night" ? "#12100e" : "#f3ecdf");
     set({ theme });
+  },
+  setSkin: (skin) => {
+    if (skin !== "ledger" && skin !== "meridian") return;
+    if (skin === get().skin || get().skinBusy) return;
+    set({ skinBusy: true, skinTarget: skin });
+    window.clearTimeout(skinTimer);
+    skinTimer = window.setTimeout(() => {
+      localStorage.setItem(SKIN_KEY, skin);
+      document.documentElement.setAttribute("data-skin", skin);
+      const meta = document.querySelector('meta[name="theme-color"]');
+      const theme = get().theme;
+      if (meta) meta.setAttribute("content", skin === "meridian" ? "#0f6e6b" : theme === "night" ? "#12100e" : "#f3ecdf");
+      set({ skin, skinBusy: false, skinTarget: null });
+    }, 1500);
   },
   setDrawer: (drawer) => set({ drawer }),
   notify: (msg, tone = "ok") => set({ toast: { id: ++toastSeq, msg, tone } }),

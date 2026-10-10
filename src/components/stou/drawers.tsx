@@ -1,6 +1,6 @@
 import { useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { Drawer } from "vaul";
-import { BookOpenText, Check, Download, FileJson, FileSpreadsheet, Moon, RotateCcw, Smartphone, Sun, Trash2, Upload } from "lucide-react";
+import { BookOpenText, Check, Download, FileJson, FileSpreadsheet, LayoutTemplate, Moon, Palette, RotateCcw, Smartphone, Sun, Trash2, Upload } from "lucide-react";
 import { draftFrom, durationLabel, EXAM_TYPES, presetOf, shiftTime, STATUS_OPTIONS, type ExamDraft } from "@/lib/stou/logic";
 import { installReady, installedAlready, runInstall, subscribeInstall } from "@/lib/stou/install";
 import { useStou } from "@/lib/stou/store";
@@ -55,6 +55,9 @@ function SettingsBody() {
   const data = useStou((s) => s.data);
   const theme = useStou((s) => s.theme);
   const setTheme = useStou((s) => s.setTheme);
+  const skin = useStou((s) => s.skin);
+  const skinBusy = useStou((s) => s.skinBusy);
+  const setSkin = useStou((s) => s.setSkin);
   const exportJson = useStou((s) => s.exportJson);
   const exportExample = useStou((s) => s.exportExample);
   const exportXls = useStou((s) => s.exportXls);
@@ -76,6 +79,19 @@ function SettingsBody() {
         {student.name || "ยังไม่ระบุชื่อ"} · {student.studentId || "ยังไม่ระบุรหัส"} · {data.curriculum.length} วิชา · สอบ {data.courses.length} · อ่าน {data.studyPlan.length} เล่ม
       </p>
       <p className="text-xs leading-relaxed text-muted">ชื่อ รหัส สาขา วิชาเอก และสนามสอบ ไม่ได้กรอกในหน้านี้ แก้ในไฟล์ .json แล้วอัปโหลดกลับมา</p>
+
+      <div className="grid grid-cols-2 gap-2">
+        <button type="button" disabled={skinBusy} className={cn("border px-3 py-3 text-left", skin === "ledger" ? "border-ink bg-ink text-paper" : "border-line")} onClick={() => setSkin("ledger")}>
+          <Palette className="size-4" />
+          <span className="mt-2 block text-sm font-semibold">สมุดชาด</span>
+          <span className={cn("mt-0.5 block text-xs", skin === "ledger" ? "text-paper/80" : "text-muted")}>ของเดิม เก็บไว้</span>
+        </button>
+        <button type="button" disabled={skinBusy} className={cn("border px-3 py-3 text-left", skin === "meridian" ? "border-saffron bg-saffron text-on-saffron" : "border-line")} onClick={() => setSkin("meridian")}>
+          <LayoutTemplate className="size-4" />
+          <span className="mt-2 block text-sm font-semibold">เมอริเดียน</span>
+          <span className={cn("mt-0.5 block text-xs", skin === "meridian" ? "text-on-saffron/80" : "text-muted")}>หน้าตาใหม่ทั้งระบบ</span>
+        </button>
+      </div>
 
       <button type="button" className="flex h-12 w-full items-center justify-between rounded-2xl border border-line bg-paper px-3 text-sm font-semibold" onClick={() => setTheme(theme === "day" ? "night" : "day")}>
         <span className="inline-flex items-center gap-2">{theme === "day" ? <Moon className="size-4" /> : <Sun className="size-4" />} {theme === "day" ? "โหมดตะเกียง (มืด)" : "โหมดกระดาษ (สว่าง)"}</span>

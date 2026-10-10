@@ -71,6 +71,74 @@
   }
 }
 
+[data-skin="meridian"] {
+  --font-sans: "Sarabun", "IBM Plex Sans Thai", sans-serif;
+  --font-display: "Sarabun", "IBM Plex Sans Thai", sans-serif;
+  --color-paper: #eef3f4;
+  --color-card: #ffffff;
+  --color-ink: #10242b;
+  --color-muted: #5d7178;
+  --color-line: #c9d7db;
+  --color-saffron: #0f6e6b;
+  --color-saffron-deep: #0a4c4a;
+  --color-wash: #e5f2f1;
+  --color-on-saffron: #f4fffe;
+  --color-seal-regular: #1d4e89;
+  --color-seal-samrit: #5b3a86;
+  --color-seal-summer: #9a6708;
+  --color-seal-retake: #0f6e6b;
+  --color-seal-fail: #9d2c4a;
+  --color-seal-pass: #0e6b52;
+  --color-seal-move: #0e7490;
+  --color-seal-idle: #64748b;
+  --color-on-seal: #f7fffe;
+  --shadow-lift: none;
+}
+
+[data-skin="meridian"] body {
+  background-color: var(--color-paper);
+  background-image:
+    linear-gradient(90deg, rgb(15 110 107 / 0.08) 1px, transparent 1px),
+    linear-gradient(rgb(15 110 107 / 0.08) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+[data-skin="meridian"] .rounded-3xl,
+[data-skin="meridian"] .rounded-2xl,
+[data-skin="meridian"] .rounded-xl,
+[data-skin="meridian"] .rounded-\[28px\] {
+  border-radius: 0;
+}
+
+[data-skin="meridian"] .rounded-full {
+  border-radius: 0;
+}
+
+[data-skin="meridian"] .shadow-lift {
+  box-shadow: none;
+}
+
+[data-skin="meridian"] [data-pane-head] {
+  flex-direction: column-reverse;
+  align-items: center;
+  text-align: center;
+  gap: 0.15rem;
+}
+
+[data-skin="meridian"] [data-pane-head] .text-right {
+  text-align: center;
+}
+
+@keyframes skin-load {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+.skin-load-bar {
+  width: 0;
+  animation: skin-load 1.45s linear forwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
